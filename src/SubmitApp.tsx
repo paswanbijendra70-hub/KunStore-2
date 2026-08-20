@@ -73,7 +73,7 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
     if (type === 'icon') {
       processImage(files[0], 200).then(res => setIconBase64(res));
     } else if (type === 'screenshots') {
-      const promises = Array.from(files).slice(0, 4).map(f => processImage(f, 800));
+      const promises = Array.from(files).slice(0, 4).map(f => processImage(f as File, 800));
       Promise.all(promises).then(res => setScreenshotsBase64(res));
     }
   };
@@ -145,7 +145,7 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-black text-gray-900 mb-2">Submit New App</h1>
+      <h1 className="text-3xl font-black text-gray-900 mb-2">Publish New App</h1>
       <p className="text-gray-600 mb-8">Follow the steps below to publish your application on KunStore.</p>
 
       <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-200">

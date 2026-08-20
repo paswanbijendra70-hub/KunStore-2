@@ -18,7 +18,7 @@ const AppIcon = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-const AppCard = ({ app }: { app: any }) => (
+const AppCard = ({ app, key }: { app: any, key?: string | number }) => (
   <Link to={`/app/${app.id}`} className="flex flex-col gap-2 group cursor-pointer">
     <AppIcon src={app.icon} alt={app.name} />
     <div>
@@ -56,8 +56,18 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [activePlatform, setActivePlatform] = useState<string>('All');
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+      setIsAppInstalled(true);
+    }
+    
+    window.addEventListener('appinstalled', () => {
+      setIsAppInstalled(true);
+    });
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -120,60 +130,79 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
       {/* Navbar */}
       <header className="bg-red-600 sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <button className="text-white lg:hidden p-1">
-              <Menu className="w-6 h-6" />
-            </button>
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-red-600 font-black text-xl">K</span>
+          {!mobileSearchOpen ? (
+            <>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <button className="text-white lg:hidden p-1">
+                  <Menu className="w-6 h-6" />
+                </button>
+                <a href="/" className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                    <span className="text-red-600 font-black text-xl">K</span>
+                  </div>
+                  <span className="text-white font-bold text-xl hidden sm:block tracking-tight">KunStore</span>
+                </a>
               </div>
-              <span className="text-white font-bold text-xl hidden sm:block tracking-tight">KunStore</span>
-            </a>
-          </div>
 
-          <div className="flex-1 max-w-2xl hidden md:block">
-            <div className="relative">
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for apps, games, articles..." 
-                className="w-full bg-red-700 text-white placeholder-red-300 border border-red-500 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 transition-colors"
-              />
-              <Search className="w-5 h-5 absolute right-3 top-2.5 text-red-300 pointer-events-none" />
-            </div>
-          </div>
+              <div className="flex-1 max-w-2xl hidden md:block">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for apps, games, articles..." 
+                    className="w-full bg-red-700 text-white placeholder-red-300 border border-red-500 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 transition-colors"
+                  />
+                  <Search className="w-5 h-5 absolute right-3 top-2.5 text-red-300 pointer-events-none" />
+                </div>
+              </div>
 
-          <div className="flex items-center gap-4">
-            <button className="text-white md:hidden p-1">
-              <Search className="w-6 h-6" />
-            </button>
-            {user ? (
+              <div className="flex items-center gap-2 sm:gap-4">
+                <button onClick={() => setMobileSearchOpen(true)} className="text-white md:hidden p-1">
+                  <Search className="w-6 h-6" />
+                </button>
+                {user ? (
               <div className="flex items-center gap-4">
                 {userData?.role === 'developer' ? (
-                  <Link to="/developer" className="hidden lg:flex items-center gap-2 text-white hover:bg-red-700 px-3 py-2 rounded-lg transition-colors">
+                  <Link to="/developer" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-red-700 px-2 sm:px-3 py-2 rounded-lg transition-colors">
                     <Code className="w-5 h-5" />
-                    <span className="font-medium">Developer Portal</span>
+                    <span className="hidden sm:block font-medium">Dev Portal</span>
                   </Link>
                 ) : (
-                  <Link to="/developer/plans" className="hidden lg:flex items-center gap-2 text-white hover:bg-red-700 px-3 py-2 rounded-lg transition-colors">
+                  <Link to="/developer/plans" className="flex items-center gap-1 sm:gap-2 text-white hover:bg-red-700 px-2 sm:px-3 py-2 rounded-lg transition-colors">
                     <Code className="w-5 h-5" />
-                    <span className="font-medium">Publish Apps</span>
+                    <span className="hidden sm:block font-medium">Publish</span>
                   </Link>
                 )}
                 <button onClick={handleLogout} className="flex items-center gap-2 text-white hover:bg-red-700 px-3 py-2 rounded-lg transition-colors">
                   <LogOut className="w-5 h-5" />
-                  <span className="hidden lg:block font-medium">Sign out</span>
+                  <span className="hidden sm:block font-medium">Sign out</span>
                 </button>
               </div>
             ) : (
               <button onClick={handleLogin} className="flex items-center gap-2 text-white hover:bg-red-700 px-3 py-2 rounded-lg transition-colors">
                 <User className="w-5 h-5" />
-                <span className="hidden lg:block font-medium">Sign in</span>
+                <span className="hidden sm:block font-medium">Sign in</span>
               </button>
             )}
-          </div>
+                      </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center gap-2 w-full">
+              <div className="relative flex-1">
+                <input 
+                  type="text" 
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search apps..." 
+                  className="w-full bg-red-700 text-white placeholder-red-300 border border-red-500 rounded-full py-2 pl-4 pr-10 focus:outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 transition-colors"
+                />
+                <Search className="w-5 h-5 absolute right-3 top-2.5 text-red-300 pointer-events-none" />
+              </div>
+              <button onClick={() => setMobileSearchOpen(false)} className="text-white font-medium px-2">Cancel</button>
+            </div>
+          )}
         </div>
         
         {/* Categories / Platforms Bar */}
@@ -215,7 +244,8 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
           </div>
         )}
         
-        <div className="my-12 p-8 bg-red-50 rounded-2xl border border-red-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+        {!isAppInstalled && (
+          <div className="my-12 p-8 bg-red-50 rounded-2xl border border-red-100 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">KunStore App</h2>
             <p className="text-gray-600 max-w-lg">Get the official KunStore app for your device. Faster downloads, auto-updates, and a smoother experience.</p>
@@ -224,6 +254,7 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
             Install App
           </button>
         </div>
+        )}
       </main>
 
       <footer className="bg-gray-900 text-gray-400 py-12 mt-20 border-t-4 border-red-600">

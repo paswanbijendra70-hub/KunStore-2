@@ -49,7 +49,7 @@ export default function DeveloperPortal({ user, userData }: { user: any, userDat
                 <LayoutDashboard className="w-5 h-5" /> Dashboard
               </Link>
               <Link to="/developer/apps/new" className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${location.pathname === '/developer/apps/new' ? 'bg-red-50 text-red-600 font-medium' : 'text-gray-600 hover:bg-gray-100'}`}>
-                <PlusCircle className="w-5 h-5" /> Submit App
+                <PlusCircle className="w-5 h-5" /> Publish App
               </Link>
             </>
           )}
