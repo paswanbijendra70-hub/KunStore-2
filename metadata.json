@@ -1,0 +1,6 @@
+{
+  "name": "KunStore",
+  "description": "A red-themed app store web application (PWA).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
