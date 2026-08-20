@@ -58,7 +58,7 @@ export default function DeveloperPlans({ user, userData }: { user: any, userData
         developerName: formData.name,
         companyName: formData.company
       });
-      window.location.href = '/developer';
+      navigate('/developer');
     } catch (e) {
       console.error(e);
       alert('Failed to complete registration');

@@ -58,6 +58,7 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
   const [activePlatform, setActivePlatform] = useState<string>('All');
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
@@ -133,7 +134,7 @@ export default function StoreFront({ user, userData }: { user: any, userData: an
           {!mobileSearchOpen ? (
             <>
               <div className="flex items-center gap-2 sm:gap-4">
-                <button className="text-white lg:hidden p-1">
+                <button onClick={() => setMobileMenuOpen(true)} className="text-white lg:hidden p-1">
                   <Menu className="w-6 h-6" />
                 </button>
                 <a href="/" className="flex items-center gap-2">
