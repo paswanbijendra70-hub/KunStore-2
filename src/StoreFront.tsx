@@ -18,7 +18,7 @@ const AppIcon = ({ src, alt }: { src: string; alt: string }) => {
   );
 };
 
-const AppCard = ({ app }: { app: any }) => (
+const AppCard: React.FC<{ app: any }> = ({ app }) => (
   <Link to={`/app/${app.id}`} className="flex flex-col gap-2 group cursor-pointer">
     <AppIcon src={app.icon} alt={app.name} />
     <div>
