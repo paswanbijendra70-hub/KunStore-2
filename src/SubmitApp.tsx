@@ -95,7 +95,7 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
 
     try {
       // Auto publish if admin, otherwise pending
-      const status = 'published';
+      const status: string = 'published';
       
       let finalDownloadUrl = formData.downloadUrl;
       

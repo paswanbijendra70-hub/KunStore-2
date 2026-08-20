@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db } from './firebase';
-import { doc, getDoc, addDoc, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
-import { ArrowLeft, Download, Star, AlertTriangle, CheckCircle, MessageSquare } from 'lucide-react';
+import { doc, getDoc, addDoc, collection, query, where, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ArrowLeft, Download, Star, AlertTriangle, CheckCircle, MessageSquare, Trash2 } from 'lucide-react';
 
 export default function AppDetails({ user }: { user: any }) {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +91,26 @@ export default function AppDetails({ user }: { user: any }) {
     }
   };
 
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm("Are you sure you want to delete this review?")) return;
+    try {
+      await deleteDoc(doc(db, 'reviews', reviewId));
+      
+      const newReviews = reviews.filter(r => r.id !== reviewId);
+      setReviews(newReviews);
+      
+      // Calculate new average rating
+      const allRatings = newReviews.map(r => r.rating);
+      const avgRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1) : '0';
+      
+      await updateDoc(doc(db, 'apps', id!), { rating: parseFloat(avgRating) });
+      setApp({ ...app, rating: parseFloat(avgRating) });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete review.");
+    }
+  };
+
   if (loading) return <div className="p-10 text-center text-gray-500">Loading...</div>;
   if (!app) return <div className="p-10 text-center text-gray-500">App not found</div>;
 
@@ -170,7 +190,7 @@ export default function AppDetails({ user }: { user: any }) {
           ) : (
             <div className="space-y-6">
               {reviews.map(review => (
-                <div key={review.id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+                <div key={review.id} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0 relative group">
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-bold text-gray-900">{review.userName || 'KunStore User'}</div>
                     <div className="flex items-center gap-1">
@@ -179,7 +199,18 @@ export default function AppDetails({ user }: { user: any }) {
                       ))}
                     </div>
                   </div>
-                  <p className="text-gray-700 text-sm">{review.comment}</p>
+                  <div className="flex items-start justify-between">
+                    <p className="text-gray-700 text-sm flex-1 mr-4">{review.comment}</p>
+                    {user?.uid === review.userId && (
+                      <button 
+                        onClick={() => handleDeleteReview(review.id)}
+                        className="text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                        title="Delete Review"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

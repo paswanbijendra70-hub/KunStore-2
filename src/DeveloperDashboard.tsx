@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { db } from './firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import { PlusCircle, Star, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Star, Edit, Trash2, Upload, X } from 'lucide-react';
 
 export default function DeveloperDashboard({ user, userData }: { user: any, userData: any }) {
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [updatingApp, setUpdatingApp] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -23,6 +27,51 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
     };
     fetchMyApps();
   }, [user]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !updatingApp) return;
+    
+    if (file.size > 800000) {
+      alert("File is too large for database storage (max 800KB).");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target?.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      await updateDoc(doc(db, 'apps', updatingApp.id), {
+        downloadUrl: base64,
+        apkName: file.name
+      });
+      
+      setApps(apps.map(a => a.id === updatingApp.id ? { ...a, downloadUrl: base64, apkName: file.name } : a));
+      alert("App file updated successfully!");
+      setUpdatingApp(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update app file.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeleteApp = async (id: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this app? This action cannot be undone.")) return;
+    
+    try {
+      await deleteDoc(doc(db, 'apps', id));
+      setApps(apps.filter(a => a.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete app.");
+    }
+  };
 
   if (loading) return <div className="text-gray-500 font-medium">Loading...</div>;
 
@@ -82,10 +131,23 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                        <Edit className="w-5 h-5" />
+                      <button 
+                        onClick={() => {
+                          setUpdatingApp(app);
+                          fileInputRef.current?.click();
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Update App File"
+                        disabled={isUploading}
+                      >
+                        <Upload className="w-5 h-5" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleDeleteApp(app.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete App"
+                        disabled={isUploading}
+                      >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
@@ -94,6 +156,24 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      
+      {/* Hidden file input for updates */}
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        className="hidden" 
+        accept=".apk,.aab,.exe,.dmg"
+      />
+      
+      {isUploading && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-bold text-gray-900">Uploading new file...</p>
+          </div>
         </div>
       )}
     </div>
