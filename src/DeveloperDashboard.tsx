@@ -12,6 +12,10 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [editingApp, setEditingApp] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({ name: '', description: '', category: '' });
+  const [isSaving, setIsSaving] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const fetchMyApps = async () => {
@@ -73,6 +77,34 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
     }
   };
 
+  const openEditModal = (app: any) => {
+    setEditingApp(app);
+    setEditFormData({
+      name: app.name || '',
+      description: app.description || '',
+      category: app.category || 'Apps'
+    });
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
+  };
+
+  const saveAppEdits = async () => {
+    if (!editingApp) return;
+    setIsSaving(true);
+    try {
+      await updateDoc(doc(db, 'apps', editingApp.id), editFormData);
+      setApps(apps.map(a => a.id === editingApp.id ? { ...a, ...editFormData } : a));
+      setEditingApp(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update app details.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) return <div className="text-gray-500 font-medium">Loading...</div>;
 
   return (
@@ -99,8 +131,8 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-x-auto shadow-sm">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="py-4 px-6 font-bold text-gray-700 text-sm uppercase tracking-wider">App</th>
@@ -131,6 +163,14 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => openEditModal(app)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Edit App Details"
+                        disabled={isUploading}
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
                       <button 
                         onClick={() => {
                           setUpdatingApp(app);
@@ -173,6 +213,75 @@ export default function DeveloperDashboard({ user, userData }: { user: any, user
           <div className="bg-white p-6 rounded-xl flex flex-col items-center gap-4">
             <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
             <p className="font-bold text-gray-900">Uploading new file...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit App Modal */}
+      {editingApp && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Edit App</h3>
+              <button onClick={() => setEditingApp(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">App Name</label>
+                <input 
+                  type="text" 
+                  name="name" 
+                  value={editFormData.name} 
+                  onChange={handleEditChange} 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-red-500" 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                <textarea 
+                  name="description" 
+                  rows={3} 
+                  value={editFormData.description} 
+                  onChange={handleEditChange} 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-red-500" 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Category</label>
+                <select 
+                  name="category" 
+                  value={editFormData.category} 
+                  onChange={handleEditChange} 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 outline-none focus:border-red-500"
+                >
+                  <option value="Apps">Apps</option>
+                  <option value="Games">Games</option>
+                  <option value="Articles">Articles</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex gap-3">
+              <button 
+                onClick={() => setEditingApp(null)}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-xl transition-colors"
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={saveAppEdits}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-colors flex items-center justify-center"
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </div>
         </div>
       )}
