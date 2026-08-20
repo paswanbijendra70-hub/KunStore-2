@@ -3,12 +3,13 @@ import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 const firebaseConfig = {
-  projectId: "compelling-bongo-4wh20",
-  appId: "1:634465762619:web:dd94c61fa6f21f51a84b1e",
-  apiKey: "AIzaSyBU53e3dH_FpDDURDtnkeXdbuF8kbSa9kY",
-  authDomain: "compelling-bongo-4wh20.firebaseapp.com",
-  storageBucket: "compelling-bongo-4wh20.firebasestorage.app",
-  messagingSenderId: "634465762619",
+  apiKey: "AIzaSyA2X-1HOFVCmRsTp8K9_b_47BLcP8DjxGA",
+  authDomain: "kun-stack.firebaseapp.com",
+  projectId: "kun-stack",
+  storageBucket: "kun-stack.firebasestorage.app",
+  messagingSenderId: "599577615528",
+  appId: "1:599577615528:web:f84582abba91e8fa72b69d",
+  measurementId: "G-LG5TLWV18L"
 };
 
 const app = initializeApp(firebaseConfig);
