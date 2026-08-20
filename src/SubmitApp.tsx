@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { db } from './firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import { storage } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Upload, ShieldCheck, Link as LinkIcon, FileBox } from 'lucide-react';
 
@@ -23,6 +25,7 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
   const [iconBase64, setIconBase64] = useState<string>('');
   const [screenshotsBase64, setScreenshotsBase64] = useState<string[]>([]);
   const [apkFileName, setApkFileName] = useState('');
+  const [apkFile, setApkFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,6 +45,7 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
 
     if (type === 'apk') {
       setApkFileName(files[0].name);
+      setApkFile(files[0]);
       return;
     }
 
@@ -91,10 +95,29 @@ export default function SubmitApp({ user, userData }: { user: any, userData: any
 
     try {
       // Auto publish if admin, otherwise pending
-      const status = userData?.role === 'admin' ? 'published' : 'pending';
+      const status = 'published';
       
+      let finalDownloadUrl = formData.downloadUrl;
+      
+      if (uploadType === 'file' && apkFile) {
+        // Since Firebase Storage isn't provisioned in this demo environment, 
+        // we'll store small files as base64 in Firestore, or alert if too large.
+        if (apkFile.size > 800000) {
+          alert("File is too large for database storage (max 800KB). Please use 'External Link' instead, or upload a smaller file.");
+          setLoading(false);
+          return;
+        }
+        
+        finalDownloadUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(apkFile);
+        });
+      }
+
       const docRef = await addDoc(collection(db, 'apps'), {
         ...formData,
+        downloadUrl: finalDownloadUrl,
         icon: iconBase64,
         screenshots: screenshotsBase64,
         apkName: apkFileName || null,

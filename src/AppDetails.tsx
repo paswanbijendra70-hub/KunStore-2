@@ -132,7 +132,7 @@ export default function AppDetails({ user }: { user: any }) {
             </div>
 
             <div className="mt-auto flex flex-wrap gap-4">
-              <a href={app.downloadUrl || '#'} download target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl flex items-center gap-2 transition-colors">
+              <a href={app.downloadUrl || '#'} download={app.apkName || app.name || 'download'} target="_blank" rel="noreferrer" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-xl flex items-center gap-2 transition-colors">
                 <Download className="w-5 h-5" /> Install
               </a>
               <button onClick={() => setReporting(true)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors">
